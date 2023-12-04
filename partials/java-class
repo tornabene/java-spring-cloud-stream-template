@@ -47,6 +47,10 @@
 {%- set typeInfo = [name, realClassName, prop] | fixType -%}
 {% set type = typeInfo[0] -%}
 {% set isArrayOfObjects = typeInfo[1] %}
+{% set isArrayOfEnums = typeInfo[2] %}
+{% set itemsEnumType = typeInfo[3] %}
+{% set itemsEnum = typeInfo[4] %}
+
 {{ indent2 }}public {{ type }} get{{- realClassName }}() {
 {{ indent3 }}return {{ variableName }};
 {{ indent2 }}}
@@ -66,6 +70,11 @@
 {# Enums #}
 {%- if prop.enum() %}
 {{ indent2 }}public static enum {{ type }} { {{ prop.enum() }} }
+{%- endif %}
+{%- if isArrayOfEnums  %}
+{{ indent2 }}public static enum {{ itemsEnumType }} { {{ itemsEnum }} };
+{{ indent2 }}
+{{ indent2 }}
 {%- endif %}
 {%- endfor -%}
 

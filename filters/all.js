@@ -315,23 +315,25 @@ function fixType([name, javaName, property]) {
   debugType(property);
   
   let isArrayOfObjects = false;
+  let isArrayOfEnums = false;
+  let itemsEnumType;
+  let itemsEnum;
 
   // For message headers, type is a property.
   // For schema properties, type is a function.
   let type = property.type;
   let format = property.format;
-  debugType(`fixType: ${property}`);
+  // console.log(`fixType: ${property}`);
 
   if (typeof type === 'function') {
     type = property.type();
     format = property.format();
   }
 
-  debugType(`fixType: type: ${type} javaName ${javaName}`);
-  debugType(property);
   // If a schema has a property that is a ref to another schema,
   // the type is undefined, and the title gives the title of the referenced schema.
   let typeName;
+
   if (type === undefined) {
     if (property.enum()) {
       debugType('It is an enum.');
@@ -351,6 +353,11 @@ function fixType([name, javaName, property]) {
       if (itemsType === 'object') {
         isArrayOfObjects = true;
         itemsType = _.upperFirst(javaName);
+      } else if (property._json.items.enum!== undefined && property._json.items.enum.length >0) {
+        isArrayOfEnums = true;
+        itemsType = _.upperFirst(javaName);
+        itemsEnumType = _.upperFirst(javaName);
+        itemsEnum =  property._json.items.enum;
       } else {
         itemsType = getType(itemsType, format).javaType;
       }
@@ -374,7 +381,7 @@ function fixType([name, javaName, property]) {
       typeName = type;
     }
   }
-  return [typeName, isArrayOfObjects];
+  return [typeName, isArrayOfObjects, isArrayOfEnums,itemsEnumType, itemsEnum];
 }
 filter.fixType = fixType;
 
@@ -501,8 +508,8 @@ filter.payloadClass = payloadClass;
 
 function schemaExtraIncludes([schemaName, schema]) {
   debugProperty(`schemaExtraIncludes ${schemaName} ${schema.type()}`);
-
   const ret = {};
+  ret.needJsonPropertyInclude = true;
   if (checkPropertyNames(schemaName, schema)) {
     ret.needJsonPropertyInclude = true;
   }
